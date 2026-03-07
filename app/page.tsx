@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-background">
-      {/* Hero */}
       <header className="border-b border-border/30">
         <nav className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 opacity-0 animate-fade-in">
