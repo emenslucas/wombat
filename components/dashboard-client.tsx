@@ -82,25 +82,37 @@ function useDraggableBar(
   );
 
   const onMouseDown = useCallback(
-    (e: React.MouseEvent) => {
+    (e: React.MouseEvent | React.TouchEvent) => {
       e.preventDefault();
       dragging.current = true;
-      onChange(getRatio(e.clientX));
-      const onMove = (ev: MouseEvent) => {
-        if (dragging.current) onChange(getRatio(ev.clientX));
+      const clientX =
+        "touches" in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+      onChange(getRatio(clientX));
+      const onMove = (ev: MouseEvent | TouchEvent) => {
+        if (dragging.current) {
+          const cx =
+            "touches" in ev
+              ? ev.touches[0].clientX
+              : (ev as MouseEvent).clientX;
+          onChange(getRatio(cx));
+        }
       };
       const onUp = () => {
         dragging.current = false;
         document.removeEventListener("mousemove", onMove);
         document.removeEventListener("mouseup", onUp);
+        document.removeEventListener("touchmove", onMove);
+        document.removeEventListener("touchend", onUp);
       };
       document.addEventListener("mousemove", onMove);
       document.addEventListener("mouseup", onUp);
+      document.addEventListener("touchmove", onMove);
+      document.addEventListener("touchend", onUp);
     },
     [getRatio, onChange],
   );
 
-  return { onMouseDown };
+  return { onStart: onMouseDown };
 }
 
 // ── Player bar ────────────────────────────────────────────────────────────
@@ -167,8 +179,8 @@ function PlayerBar({
     if (audioRef.current) audioRef.current.volume = next ? 0 : volume;
   };
 
-  const { onMouseDown: onSeekDown } = useDraggableBar(seekBarRef, handleSeek);
-  const { onMouseDown: onVolDown } = useDraggableBar(volBarRef, handleVolume);
+  const { onStart: onSeekDown } = useDraggableBar(seekBarRef, handleSeek);
+  const { onStart: onVolDown } = useDraggableBar(volBarRef, handleVolume);
 
   const fmt = (s: number) => {
     if (!s || isNaN(s)) return "0:00";
@@ -178,16 +190,17 @@ function PlayerBar({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur border-t border-border/30 px-6 pb-4 pt-3 z-20">
+    <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur border-t border-border/30 px-3 sm:px-6 pb-3 sm:pb-4 pt-2 sm:pt-3 z-20">
       <div className="max-w-4xl mx-auto flex flex-col gap-2">
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-muted-foreground/50 tabular-nums w-10 text-right">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className="text-xs text-muted-foreground/50 tabular-nums w-8 sm:w-10 text-right hidden sm:block">
             {fmt(progress * duration)}
           </span>
           <div
             ref={seekBarRef}
             className="flex-1 h-1 bg-border/40 rounded-full cursor-pointer relative group select-none"
             onMouseDown={onSeekDown}
+            onTouchStart={onSeekDown}
           >
             <div
               className="absolute inset-y-0 left-0 bg-foreground/70 rounded-full pointer-events-none"
@@ -198,31 +211,31 @@ function PlayerBar({
               style={{ left: `calc(${progress * 100}% - 6px)` }}
             />
           </div>
-          <span className="text-xs text-muted-foreground/50 tabular-nums w-10">
+          <span className="text-xs text-muted-foreground/50 tabular-nums w-8 sm:w-10 hidden sm:block">
             {fmt(duration)}
           </span>
         </div>
         <div className="flex">
           <div className="grid grid-cols-3 items-center w-full">
             {/* IZQUIERDA */}
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               {playingTrack.cover_url ? (
                 <img
                   src={playingTrack.cover_url}
                   alt={playingTrack.title}
-                  className="w-9 h-9 rounded-md object-cover shrink-0"
+                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-md object-cover shrink-0"
                 />
               ) : (
-                <div className="w-9 h-9 bg-secondary/80 rounded-md flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 bg-secondary/80 rounded-md flex items-center justify-center shrink-0">
                   <Music className="w-3.5 h-3.5 text-muted-foreground/40" />
                 </div>
               )}
 
               <div className="min-w-0">
-                <p className="text-sm font-medium truncate">
+                <p className="text-xs sm:text-sm font-medium truncate">
                   {playingTrack.title}
                 </p>
-                <p className="text-xs text-muted-foreground/50 truncate">
+                <p className="text-xs text-muted-foreground/50 truncate hidden sm:block">
                   {playingTrack.artist || ""}
                 </p>
               </div>
@@ -230,11 +243,11 @@ function PlayerBar({
 
             {/* CENTRO */}
             <div className="flex justify-center">
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0 sm:gap-1">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="w-8 h-8 text-muted-foreground/60 hover:text-foreground"
+                  className="w-8 h-8 text-muted-foreground/60 hover:text-foreground hidden sm:flex"
                   onClick={onPrev}
                 >
                   <SkipBack className="w-4 h-4" />
@@ -254,7 +267,7 @@ function PlayerBar({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="w-8 h-8 text-muted-foreground/60 hover:text-foreground"
+                  className="w-8 h-8 text-muted-foreground/60 hover:text-foreground hidden sm:flex"
                   onClick={onNext}
                 >
                   <SkipForward className="w-4 h-4" />
@@ -264,10 +277,10 @@ function PlayerBar({
 
             {/* DERECHA */}
             <div className="flex justify-end">
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                 <button
                   onClick={toggleMute}
-                  className="text-muted-foreground/60 hover:text-foreground transition-colors"
+                  className="text-muted-foreground/60 hover:text-foreground transition-colors p-1"
                 >
                   {muted || volume === 0 ? (
                     <VolumeX className="w-4 h-4" />
@@ -277,8 +290,9 @@ function PlayerBar({
                 </button>
                 <div
                   ref={volBarRef}
-                  className="w-20 h-1 bg-border/40 rounded-full cursor-pointer relative group select-none"
+                  className="w-12 sm:w-20 h-1 bg-border/40 rounded-full cursor-pointer relative group select-none hidden sm:block"
                   onMouseDown={onVolDown}
+                  onTouchStart={onVolDown}
                 >
                   <div
                     className="absolute inset-y-0 left-0 bg-foreground/50 rounded-full pointer-events-none"
@@ -750,7 +764,7 @@ function CreateAlbumModal({
       onClick={onClose}
     >
       <div
-        className="bg-card border border-border/40 rounded-2xl p-6 w-full max-w-sm shadow-xl"
+        className="bg-card border border-border/40 rounded-2xl p-4 sm:p-6 w-full max-w-sm shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-semibold mb-4">Crear nuevo album</h2>
@@ -1165,7 +1179,7 @@ export default function DashboardClient({
   const openAlbum = albums.find((a) => a.id === openAlbumId);
 
   return (
-    <main className="min-h-screen bg-background pb-28">
+    <main className="min-h-screen bg-background pb-20 sm:pb-28">
       <audio ref={audioRef} />
 
       {/* Album Editor overlay */}
@@ -1205,7 +1219,7 @@ export default function DashboardClient({
           }}
         >
           <div
-            className="bg-card border border-border/40 rounded-2xl p-6 w-full max-w-md shadow-xl"
+            className="bg-card border border-border/40 rounded-2xl p-4 sm:p-6 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-lg font-semibold mb-4">Subir track</h2>
@@ -1234,13 +1248,13 @@ export default function DashboardClient({
               </div>
               <div className="space-y-1.5">
                 <Label className="text-sm text-muted-foreground/80">
-                  Archivo de audio * (MP3, WAV, FLAC · máx 50 MB)
+                  Audio * (MP3, WAV, FLAC)
                 </Label>
                 <input
                   type="file"
                   accept=".mp3,.wav,.flac,audio/*"
                   onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
-                  className="w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-secondary file:text-foreground hover:file:bg-secondary/80 cursor-pointer"
+                  className="w-full text-xs sm:text-sm text-muted-foreground file:mr-2 sm:file:mr-3 file:py-1.5 file:px-2 sm:file:px-3 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-secondary file:text-foreground hover:file:bg-secondary/80 cursor-pointer"
                 />
               </div>
               <div className="space-y-1.5">
@@ -1258,13 +1272,13 @@ export default function DashboardClient({
                       setCoverPreview(url);
                     } else setCoverPreview(null);
                   }}
-                  className="w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-secondary file:text-foreground hover:file:bg-secondary/80 cursor-pointer"
+                  className="w-full text-xs sm:text-sm text-muted-foreground file:mr-2 sm:file:mr-3 file:py-1.5 file:px-2 sm:file:px-3 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-secondary file:text-foreground hover:file:bg-secondary/80 cursor-pointer"
                 />
                 {coverPreview && (
                   <img
                     src={coverPreview}
                     alt="preview"
-                    className="w-16 h-16 rounded-lg object-cover mt-1"
+                    className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover mt-1"
                   />
                 )}
               </div>
@@ -1307,39 +1321,39 @@ export default function DashboardClient({
 
       {/* Header */}
       <header className="border-b border-border/30 sticky top-0 bg-background/95 backdrop-blur z-10">
-        <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
             <Disc3 className="w-5 h-5 text-foreground/80" />
-            <span className="font-semibold tracking-tight">
+            <span className="font-semibold tracking-tight text-sm sm:text-base">
               @{user.username}
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <Button
               variant="ghost"
               size="sm"
-              className="rounded-full px-4 gap-1.5 text-muted-foreground/70 hover:text-foreground border border-border/40"
+              className="rounded-full px-2 sm:px-4 gap-1 text-muted-foreground/70 hover:text-foreground border border-border/40"
               onClick={() => copyLink(`/${user.username}`)}
             >
               <Link2 className="w-3.5 h-3.5" />
-              Mi perfil
+              <span className="hidden sm:inline">Mi perfil</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="rounded-full px-4 gap-1.5 border-border/40"
+              className="rounded-full px-2 sm:px-4 gap-1 border-border/40"
               onClick={() => setShowCreateAlbum(true)}
             >
               <FolderOpen className="w-3.5 h-3.5" />
-              Nuevo album
+              <span className="hidden sm:inline">Nuevo album</span>
             </Button>
             <Button
               size="sm"
-              className="rounded-full px-4 gap-1.5"
+              className="rounded-full px-2 sm:px-4 gap-1"
               onClick={() => setUploadOpen(true)}
             >
               <Upload className="w-3.5 h-3.5" />
-              Subir track
+              <span className="hidden sm:inline">Subir track</span>
             </Button>
             <Button
               variant="ghost"
@@ -1354,7 +1368,7 @@ export default function DashboardClient({
       </header>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="max-w-4xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
         {/* Storage info */}
         <div className="mb-6 text-xs text-muted-foreground/50">
           {tracks.length} track{tracks.length !== 1 ? "s" : ""} ·{" "}
@@ -1495,9 +1509,9 @@ export default function DashboardClient({
                   return (
                     <div
                       key={track.id}
-                      className={`flex items-center gap-3 p-3 rounded-xl group transition-colors cursor-pointer ${isActive ? "bg-secondary/50" : "hover:bg-secondary/30"}`}
+                      className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl group transition-colors cursor-pointer ${isActive ? "bg-secondary/50" : "hover:bg-secondary/30"}`}
                     >
-                      <span className="text-xs text-muted-foreground/40 w-5 text-center tabular-nums shrink-0">
+                      <span className="text-xs text-muted-foreground/40 w-4 sm:w-5 text-center tabular-nums shrink-0">
                         {index + 1}
                       </span>
                       <button
@@ -1508,7 +1522,7 @@ export default function DashboardClient({
                           <img
                             src={track.cover_url}
                             alt={track.title}
-                            className="w-15 h-15 rounded-lg object-cover"
+                            className="w-10 h-10 rounded-lg object-cover"
                           />
                         ) : (
                           <div
@@ -1531,11 +1545,11 @@ export default function DashboardClient({
                         >
                           {track.title}
                         </p>
-                        <p className="text-xs text-muted-foreground/50 truncate">
+                        <p className="text-xs text-muted-foreground/50 truncate hidden sm:block">
                           {track.artist || "—"}
                         </p>
                       </div>
-                      <span className="text-xs text-muted-foreground/40 tabular-nums shrink-0">
+                      <span className="text-xs text-muted-foreground/40 tabular-nums shrink-0 hidden sm:inline">
                         {formatDuration(track.duration)}
                       </span>
                       {/* Edit button */}
