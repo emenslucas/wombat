@@ -138,6 +138,16 @@ export default function PublicPlayer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Cleanup: pause audio when component unmounts
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = "";
+      }
+    };
+  }, []);
+
   const skip = (dir: "prev" | "next") => {
     if (!playingId) return;
     const idx = tracks.findIndex((t) => t.id === playingId);
@@ -245,6 +255,7 @@ export default function PublicPlayer({
               <span className="text-xs text-muted-foreground/50 tabular-nums w-8 sm:w-10 text-right hidden sm:block">
                 {fmt(currentTime)}
               </span>
+
               <div
                 ref={seekRef}
                 className="flex-1 h-1 bg-border/40 rounded-full cursor-pointer relative group select-none"
@@ -260,16 +271,17 @@ export default function PublicPlayer({
                   style={{ left: `calc(${progress * 100}% - 6px)` }}
                 />
               </div>
+
               <span className="text-xs text-muted-foreground/50 tabular-nums w-8 sm:w-10 hidden sm:block">
                 {fmt(duration)}
               </span>
             </div>
 
             {/* Controls */}
-            <div className="flex items-center gap-2 sm:gap-4">
-              <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+            <div className="grid grid-cols-3 items-center w-full">
+              {/* IZQUIERDA (info canción) */}
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 {playingTrack.cover_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={playingTrack.cover_url}
                     alt={playingTrack.title}
@@ -280,6 +292,7 @@ export default function PublicPlayer({
                     <Music className="w-3.5 h-3.5 text-muted-foreground/40" />
                   </div>
                 )}
+
                 <div className="min-w-0">
                   <p className="text-xs sm:text-sm font-medium truncate">
                     {playingTrack.title}
@@ -290,63 +303,73 @@ export default function PublicPlayer({
                 </div>
               </div>
 
-              <div className="flex items-center gap-0 sm:gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="w-8 h-8 text-muted-foreground/60 hover:text-foreground hidden sm:flex"
-                  onClick={() => skip("prev")}
-                >
-                  <SkipBack className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="w-9 h-9 text-foreground"
-                  onClick={() => playTrack(playingTrack)}
-                >
-                  {isPlaying ? (
-                    <Pause className="w-5 h-5" />
-                  ) : (
-                    <Play className="w-5 h-5" />
-                  )}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="w-8 h-8 text-muted-foreground/60 hover:text-foreground hidden sm:flex"
-                  onClick={() => skip("next")}
-                >
-                  <SkipForward className="w-4 h-4" />
-                </Button>
+              {/* CENTRO (controles reproducción) */}
+              <div className="flex justify-center">
+                <div className="flex items-center gap-0 sm:gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="w-8 h-8 text-muted-foreground/60 hover:text-foreground hidden sm:flex"
+                    onClick={() => skip("prev")}
+                  >
+                    <SkipBack className="w-4 h-4" />
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="w-9 h-9 text-foreground"
+                    onClick={() => playTrack(playingTrack)}
+                  >
+                    {isPlaying ? (
+                      <Pause className="w-5 h-5" />
+                    ) : (
+                      <Play className="w-5 h-5" />
+                    )}
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="w-8 h-8 text-muted-foreground/60 hover:text-foreground hidden sm:flex"
+                    onClick={() => skip("next")}
+                  >
+                    <SkipForward className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
 
-              <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                <button
-                  onClick={toggleMute}
-                  className="text-muted-foreground/60 hover:text-foreground transition-colors p-1"
-                >
-                  {muted || volume === 0 ? (
-                    <VolumeX className="w-4 h-4" />
-                  ) : (
-                    <Volume2 className="w-4 h-4" />
-                  )}
-                </button>
-                <div
-                  ref={volRef}
-                  className="w-12 sm:w-20 h-1 bg-border/40 rounded-full cursor-pointer relative group select-none hidden sm:block"
-                  onMouseDown={onVolDown}
-                >
+              {/* DERECHA (volumen) */}
+              <div className="flex justify-end">
+                <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                  <button
+                    onClick={toggleMute}
+                    className="text-muted-foreground/60 hover:text-foreground transition-colors p-1"
+                  >
+                    {muted || volume === 0 ? (
+                      <VolumeX className="w-4 h-4" />
+                    ) : (
+                      <Volume2 className="w-4 h-4" />
+                    )}
+                  </button>
+
                   <div
-                    className="absolute inset-y-0 left-0 bg-foreground/50 rounded-full pointer-events-none"
-                    style={{ width: `${(muted ? 0 : volume) * 100}%` }}
-                  />
-                  <div
-                    className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-                    style={{
-                      left: `calc(${(muted ? 0 : volume) * 100}% - 5px)`,
-                    }}
-                  />
+                    ref={volRef}
+                    className="w-12 sm:w-20 h-1 bg-border/40 rounded-full cursor-pointer relative group select-none hidden sm:block"
+                    onMouseDown={onVolDown}
+                  >
+                    <div
+                      className="absolute inset-y-0 left-0 bg-foreground/50 rounded-full pointer-events-none"
+                      style={{ width: `${(muted ? 0 : volume) * 100}%` }}
+                    />
+
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                      style={{
+                        left: `calc(${(muted ? 0 : volume) * 100}% - 5px)`,
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

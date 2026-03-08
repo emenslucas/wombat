@@ -165,6 +165,16 @@ export function AudioPlayer({
     }
   }, [currentTrackIndex, currentTrack]);
 
+  // Cleanup: pause audio when component unmounts
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = "";
+      }
+    };
+  }, []);
+
   // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
