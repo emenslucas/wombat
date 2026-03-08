@@ -17,7 +17,7 @@ const dmSans = DM_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'Untitled Music',
+  title: 'Wombat Music',
   description: 'Share your music with the world',
   generator: 'v0.app',
 }

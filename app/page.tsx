@@ -9,7 +9,7 @@ export default function HomePage() {
         <nav className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 opacity-0 animate-fade-in">
             <Disc3 className="w-5 h-5 text-foreground/80" />
-            <span className="font-semibold tracking-tight">Untitled</span>
+            <span className="font-semibold tracking-tight">Wombat</span>
           </Link>
           <div className="flex items-center gap-3 opacity-0 animate-fade-in stagger-1">
             <Link href="/admin/login">
@@ -26,7 +26,7 @@ export default function HomePage() {
       </header>
 
       <section className="max-w-4xl mx-auto px-6 py-28 md:py-40 text-center">
-        <h1 className="text-5xl md:text-7xl font-semibold text-foreground tracking-tight text-balance leading-[1.1] opacity-0 animate-fade-in stagger-2">
+        <h1 className="text-5xl md:text-6xl font-semibold text-foreground tracking-tight text-balance leading-[1.1] opacity-0 animate-fade-in stagger-2">
           Una página hecha por y para
           <br />
           <span className="text-muted-foreground/60">Wombats</span>
@@ -90,7 +90,7 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-6 py-10 flex items-center justify-between">
           <div className="flex items-center gap-2.5 text-muted-foreground/60">
             <Disc3 className="w-4 h-4" />
-            <span className="text-sm">Untitled</span>
+            <span className="text-sm">Wombat</span>
           </div>
           <p className="text-sm text-muted-foreground/50">
             Para artistas, por artistas.
