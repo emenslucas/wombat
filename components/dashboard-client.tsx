@@ -827,7 +827,7 @@ export default function DashboardClient({
   // Upload state
   const [uploadOpen, setUploadOpen] = useState(false);
   const [trackTitle, setTrackTitle] = useState("");
-  const [trackArtist, setTrackArtist] = useState("");
+  const [trackArtist, setTrackArtist] = useState(user.username);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
@@ -838,9 +838,53 @@ export default function DashboardClient({
   const [showCreateAlbum, setShowCreateAlbum] = useState(false);
   const [openAlbumId, setOpenAlbumId] = useState<string | null>(null);
 
+  // Update durations for tracks that don't have them
+  useEffect(() => {
+    const updateDurations = async () => {
+      const tracksToUpdate = tracks.filter(
+        (t) => t.duration === null || t.duration === undefined,
+      );
+      if (tracksToUpdate.length === 0) return;
+
+      for (const track of tracksToUpdate) {
+        try {
+          const duration = await new Promise<number>((resolve) => {
+            const audio = new Audio(track.blob_url);
+            audio.addEventListener("loadedmetadata", () => {
+              resolve(Math.floor(audio.duration));
+            });
+            audio.addEventListener("error", () => {
+              resolve(0);
+            });
+          });
+
+          if (duration > 0) {
+            const res = await fetch(`/api/tracks/${track.id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ duration }),
+            });
+            if (res.ok) {
+              setTracks((prev) =>
+                prev.map((t) => (t.id === track.id ? { ...t, duration } : t)),
+              );
+            }
+          }
+        } catch (error) {
+          console.error(
+            `Failed to update duration for track ${track.id}:`,
+            error,
+          );
+        }
+      }
+    };
+
+    updateDurations();
+  }, [tracks]);
+
   const resetUploadForm = () => {
     setTrackTitle("");
-    setTrackArtist("");
+    setTrackArtist(user.username);
     setAudioFile(null);
     setCoverFile(null);
     setCoverPreview(null);
@@ -934,6 +978,18 @@ export default function DashboardClient({
         return;
       }
 
+      // Extract duration from uploaded audio
+      setUploadProgress("Procesando audio...");
+      const duration = await new Promise<number>((resolve) => {
+        const audio = new Audio(d2.url);
+        audio.addEventListener("loadedmetadata", () => {
+          resolve(Math.floor(audio.duration));
+        });
+        audio.addEventListener("error", () => {
+          resolve(0); // fallback
+        });
+      });
+
       setUploadProgress("Guardando...");
       const r3 = await fetch("/api/tracks", {
         method: "POST",
@@ -941,6 +997,7 @@ export default function DashboardClient({
         body: JSON.stringify({
           title: trackTitle.trim(),
           artist: trackArtist.trim(),
+          duration,
           blob_url: d2.url,
           blob_pathname: d2.pathname,
           file_size: d2.size,
@@ -1267,7 +1324,7 @@ export default function DashboardClient({
                           <img
                             src={track.cover_url}
                             alt={track.title}
-                            className="w-10 h-10 rounded-lg object-cover"
+                            className="w-15 h-15 rounded-lg object-cover"
                           />
                         ) : (
                           <div
