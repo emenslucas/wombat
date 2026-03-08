@@ -27,13 +27,12 @@ export default function HomePage() {
 
       <section className="max-w-4xl mx-auto px-6 py-28 md:py-40 text-center">
         <h1 className="text-5xl md:text-7xl font-semibold text-foreground tracking-tight text-balance leading-[1.1] opacity-0 animate-fade-in stagger-2">
-          Comparte tu música
+          Una página hecha por y para
           <br />
-          <span className="text-muted-foreground/60">con el mundo</span>
+          <span className="text-muted-foreground/60">Wombats</span>
         </h1>
         <p className="mt-8 text-lg text-muted-foreground/80 max-w-xl mx-auto leading-relaxed opacity-0 animate-fade-in stagger-3">
-          Una plataforma minimalista para artistas que quieren subir, organizar y compartir su música. 
-          Sin anuncios, sin distracciones. Solo tu sonido.
+          Compartí tu música con otros wombats alrededor del mundo.
         </p>
         <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 opacity-0 animate-slide-up stagger-4">
           <Link href="/admin/register">
