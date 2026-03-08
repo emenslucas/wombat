@@ -15,17 +15,15 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { duration } = body;
-
-    if (duration === undefined) {
-      return NextResponse.json(
-        { error: "Duration requerido" },
-        { status: 400 },
-      );
-    }
+    const { duration, title, artist, cover_url } = body;
 
     const rows = await sql`
-      UPDATE tracks SET duration = ${duration} WHERE id = ${id} AND user_id = ${user.id}
+      UPDATE tracks SET
+        title = COALESCE(${title ?? null}, title),
+        artist = COALESCE(${artist ?? null}, artist),
+        cover_url = COALESCE(${cover_url ?? null}, cover_url),
+        duration = COALESCE(${duration ?? null}, duration)
+      WHERE id = ${id} AND user_id = ${user.id}
       RETURNING *
     `;
 

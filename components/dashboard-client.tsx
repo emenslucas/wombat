@@ -838,6 +838,20 @@ export default function DashboardClient({
   const [showCreateAlbum, setShowCreateAlbum] = useState(false);
   const [openAlbumId, setOpenAlbumId] = useState<string | null>(null);
 
+  // Edit track state
+  const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
+  const [editingTrackTitle, setEditingTrackTitle] = useState("");
+  const [editingTrackArtist, setEditingTrackArtist] = useState("");
+  const [editingTrackCover, setEditingTrackCover] = useState<string | null>(
+    null,
+  );
+  const [editingCoverFile, setEditingCoverFile] = useState<File | null>(null);
+  const [editingCoverPreview, setEditingCoverPreview] = useState<string | null>(
+    null,
+  );
+  const [editingTrackSaving, setEditingTrackSaving] = useState(false);
+  const editingCoverInputRef = useRef<HTMLInputElement>(null);
+
   // Update durations for tracks that don't have them
   useEffect(() => {
     const updateDurations = async () => {
@@ -1039,6 +1053,78 @@ export default function DashboardClient({
       toast.success("Track eliminado");
     } catch {
       toast.error("Error al eliminar track");
+    }
+  };
+
+  // ── Start editing track ─────────────────────────────────────────────────
+  const startEditingTrack = (track: Track) => {
+    setEditingTrackId(track.id);
+    setEditingTrackTitle(track.title);
+    setEditingTrackArtist(track.artist || "");
+    setEditingTrackCover(track.cover_url || null);
+    setEditingCoverFile(null);
+    setEditingCoverPreview(null);
+  };
+
+  // ── Cancel editing track ────────────────────────────────────────────────
+  const cancelEditingTrack = () => {
+    setEditingTrackId(null);
+    setEditingTrackTitle("");
+    setEditingTrackArtist("");
+    setEditingTrackCover(null);
+    setEditingCoverFile(null);
+    setEditingCoverPreview(null);
+  };
+
+  // ── Save track edits ────────────────────────────────────────────────────
+  const saveEditingTrack = async () => {
+    if (!editingTrackId || !editingTrackTitle.trim() || editingTrackSaving)
+      return;
+
+    setEditingTrackSaving(true);
+    try {
+      let coverUrl = editingTrackCover;
+
+      // Upload new cover if selected
+      if (editingCoverFile) {
+        const fd = new FormData();
+        fd.append("file", editingCoverFile);
+        fd.append("type", "cover");
+        const r = await fetch("/api/upload", { method: "POST", body: fd });
+        const d = await r.json();
+        if (!r.ok) {
+          toast.error(d.error || "Error al subir portada");
+          return;
+        }
+        coverUrl = d.url;
+      }
+
+      const res = await fetch(`/api/tracks/${editingTrackId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: editingTrackTitle.trim(),
+          artist: editingTrackArtist.trim(),
+          cover_url: coverUrl,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Error al guardar");
+        return;
+      }
+
+      setTracks((prev) =>
+        prev.map((t) =>
+          t.id === editingTrackId ? { ...t, ...data.track } : t,
+        ),
+      );
+      toast.success("Track actualizado");
+      cancelEditingTrack();
+    } catch {
+      toast.error("Error al guardar track");
+    } finally {
+      setEditingTrackSaving(false);
     }
   };
 
@@ -1308,6 +1394,104 @@ export default function DashboardClient({
               <div className="space-y-1">
                 {tracks.map((track, index) => {
                   const isActive = playingId === track.id;
+                  const isEditing = editingTrackId === track.id;
+
+                  if (isEditing) {
+                    // Editing mode
+                    return (
+                      <div
+                        key={track.id}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-secondary/30 border border-border/40"
+                      >
+                        <span className="text-xs text-muted-foreground/40 w-5 text-center tabular-nums shrink-0">
+                          {index + 1}
+                        </span>
+                        {/* Cover preview */}
+                        <div
+                          className="shrink-0 cursor-pointer relative"
+                          onClick={() => editingCoverInputRef.current?.click()}
+                        >
+                          {editingCoverPreview || editingTrackCover ? (
+                            <img
+                              src={
+                                editingCoverPreview || editingTrackCover || ""
+                              }
+                              alt="Portada"
+                              className="w-10 h-10 rounded-lg object-cover"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-lg bg-secondary/50 flex items-center justify-center">
+                              <ImageIcon className="w-4 h-4 text-muted-foreground/40" />
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/40 rounded-lg opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <ImageIcon className="w-4 h-4 text-white" />
+                          </div>
+                        </div>
+                        <input
+                          ref={editingCoverInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) {
+                              setEditingCoverFile(f);
+                              setEditingCoverPreview(URL.createObjectURL(f));
+                            }
+                          }}
+                        />
+                        {/* Edit inputs */}
+                        <div className="flex-1 min-w-0 flex flex-col gap-1">
+                          <Input
+                            value={editingTrackTitle}
+                            onChange={(e) =>
+                              setEditingTrackTitle(e.target.value)
+                            }
+                            placeholder="Título"
+                            className="h-8 text-sm bg-background/50"
+                            autoFocus
+                          />
+                          <Input
+                            value={editingTrackArtist}
+                            onChange={(e) =>
+                              setEditingTrackArtist(e.target.value)
+                            }
+                            placeholder="Artista"
+                            className="h-7 text-xs bg-background/50 text-muted-foreground"
+                          />
+                        </div>
+                        <span className="text-xs text-muted-foreground/40 tabular-nums shrink-0">
+                          {formatDuration(track.duration)}
+                        </span>
+                        {/* Save/Cancel buttons */}
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={saveEditingTrack}
+                            disabled={
+                              editingTrackSaving || !editingTrackTitle.trim()
+                            }
+                            className="p-1.5 text-muted-foreground/60 hover:text-foreground disabled:opacity-50"
+                          >
+                            {editingTrackSaving ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Check className="w-4 h-4" />
+                            )}
+                          </button>
+                          <button
+                            onClick={cancelEditingTrack}
+                            disabled={editingTrackSaving}
+                            className="p-1.5 text-muted-foreground/60 hover:text-foreground disabled:opacity-50"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Normal display mode
                   return (
                     <div
                       key={track.id}
@@ -1354,6 +1538,13 @@ export default function DashboardClient({
                       <span className="text-xs text-muted-foreground/40 tabular-nums shrink-0">
                         {formatDuration(track.duration)}
                       </span>
+                      {/* Edit button */}
+                      <button
+                        onClick={() => startEditingTrack(track)}
+                        className="opacity-0 group-hover:opacity-100 text-muted-foreground/50 hover:text-foreground transition-all p-1"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <button className="opacity-0 group-hover:opacity-100 text-muted-foreground/50 hover:text-red-400 transition-all p-1">
