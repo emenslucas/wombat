@@ -1,6 +1,7 @@
 import Link from 'next/link'
-import { Disc3, ArrowRight, Music, Share2, Smartphone } from 'lucide-react'
+import { Disc3, ArrowRight, Music, Share2, Smartphone, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 import Image from 'next/image'
 
 export default function HomePage() {
@@ -12,7 +13,9 @@ export default function HomePage() {
             <Image src="/icons/wombat.svg" alt="Wombat" width={40} height={40} />
             <span className="font-semibold tracking-tight">Wombat</span>
           </Link>
-          <div className="flex items-center gap-3 opacity-0 animate-fade-in stagger-1">
+          
+          {/* Desktop navigation */}
+          <div className="hidden sm:flex items-center gap-3 opacity-0 animate-fade-in stagger-1">
             <Link href="/admin/login">
               <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
                 Iniciar sesión
@@ -23,6 +26,28 @@ export default function HomePage() {
             </Link>
           </div>
 
+          {/* Mobile navigation */}
+          <Sheet>
+            <SheetTrigger asChild className="sm:hidden">
+              <Button variant="ghost" size="icon" className="opacity-0 animate-fade-in stagger-1">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Abrir menú</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[280px]">
+              <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
+              <div className="flex flex-col gap-4 mt-8">
+                <Link href="/admin/login">
+                  <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground">
+                    Iniciar sesión
+                  </Button>
+                </Link>
+                <Link href="/admin/register">
+                  <Button className="w-full rounded-full">Comenzar</Button>
+                </Link>
+              </div>
+            </SheetContent>
+          </Sheet>
         </nav>
       </header>
 
