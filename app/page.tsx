@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { Disc3, ArrowRight, Music, Share2, Smartphone } from 'lucide-react'
+import Image from 'next/image'
+import { ArrowRight, Music, Share2, Smartphone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export default function HomePage() {
@@ -8,7 +9,7 @@ export default function HomePage() {
       <header className="border-b border-border/30">
         <nav className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 opacity-0 animate-fade-in">
-            <Disc3 className="w-5 h-5 text-foreground/80" />
+            <Image src="/icon.svg" alt="Wombat" width={20} height={20} className="dark:invert" />
             <span className="font-semibold tracking-tight">Wombat</span>
           </Link>
           <div className="flex items-center gap-3 opacity-0 animate-fade-in stagger-1">
@@ -89,7 +90,7 @@ export default function HomePage() {
       <footer className="border-t border-border/30">
         <div className="max-w-6xl mx-auto px-6 py-10 flex items-center justify-between">
           <div className="flex items-center gap-2.5 text-muted-foreground/60">
-            <Disc3 className="w-4 h-4" />
+            <Image src="/icon.svg" alt="Wombat" width={16} height={16} className="dark:invert opacity-60" />
             <span className="text-sm">Wombat</span>
           </div>
           <p className="text-sm text-muted-foreground/50">
