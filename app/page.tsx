@@ -36,14 +36,16 @@ export default function HomePage() {
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px]">
               <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
-              <div className="flex flex-col gap-4 mt-8">
+              <div className="flex flex-col gap-2 mt-8">
                 <Link href="/admin/login">
                   <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground">
                     Iniciar sesión
                   </Button>
                 </Link>
                 <Link href="/admin/register">
-                  <Button className="w-full rounded-full">Comenzar</Button>
+                  <Button variant="ghost" className="w-full justify-start">
+                    Comenzar
+                  </Button>
                 </Link>
               </div>
             </SheetContent>
