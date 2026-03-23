@@ -3,8 +3,16 @@ import { Disc3, ArrowRight, Music, Share2, Smartphone, Menu } from 'lucide-react
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 import Image from 'next/image'
+import { getSession } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 
-export default function HomePage() {
+export default async function HomePage() {
+  const session = await getSession()
+  
+  if (session) {
+    redirect('/admin/dashboard')
+  }
+
   return (
     <main className="min-h-screen bg-background">
       <header className="border-b border-border/30">
