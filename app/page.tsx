@@ -9,7 +9,7 @@ export default function HomePage() {
       <header className="border-b border-border/30">
         <nav className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 opacity-0 animate-fade-in">
-            <Image src="/icons/wombat.svg" alt="Wombat" width={20} height={20} />
+            <Image src="/icons/wombat.svg" alt="Wombat" width={40} height={40} />
             <span className="font-semibold tracking-tight">Wombat</span>
           </Link>
           <div className="flex items-center gap-3 opacity-0 animate-fade-in stagger-1">
