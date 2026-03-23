@@ -1,6 +1,6 @@
 {
-  "name": "Untitled Music",
-  "short_name": "Untitled",
+  "name": "Wombat",
+  "short_name": "Wombat",
   "description": "Share your music with the world",
   "start_url": "/",
   "display": "standalone",

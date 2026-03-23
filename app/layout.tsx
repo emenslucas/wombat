@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Untitled Music',
+    title: 'Wombat',
   },
   formatDetection: {
     telephone: false,
