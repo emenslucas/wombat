@@ -28,8 +28,10 @@ export async function createSessionCookie(userId: string): Promise<void> {
     .setExpirationTime("30d")
     .sign(JWT_SECRET);
 
-  // Store token in DB
-  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  // Store token in DB - 30 days from now
+  const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
+  const expiresAt = new Date(Date.now() + thirtyDaysInMs);
+  
   await sql`
     INSERT INTO sessions (user_id, token, expires_at)
     VALUES (${userId}, ${token}, ${expiresAt})
@@ -40,7 +42,8 @@ export async function createSessionCookie(userId: string): Promise<void> {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 30,
+    maxAge: 60 * 60 * 24 * 30, // 30 days in seconds
+    expires: expiresAt, // Explicit expiry date for browser persistence
     path: "/",
   });
 }
