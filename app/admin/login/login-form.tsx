@@ -34,7 +34,7 @@ export default function LoginForm() {
       }
 
       toast.success("¡Bienvenido!");
-      router.push("/admin/dashboard");
+      router.push("/dashboard");
       router.refresh();
     } catch {
       toast.error("Algo salió mal");
